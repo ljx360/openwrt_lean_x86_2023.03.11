@@ -8,7 +8,7 @@
 # Description: Build OpenWrt using GitHub Actions
 #
 
-name: Build lean+ext,ljx,2023.03.11
+name: Build lean+ext,ljx,2023.03.11-v2
 
 on:
   repository_dispatch:
@@ -160,7 +160,13 @@ jobs:
         echo "cp .config to /workdir/openwrt/.config"
         cd $GITHUB_WORKSPACE
         [ -e files ] && mv files /workdir/openwrt/files
+        [ ! -e files ] && echo "";echo "not exist [files]"
+        
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE /workdir/openwrt/.config
+        [ ! -e $CONFIG_FILE ] && echo "";echo "not exist $CONFIG_FILE"
+        
+        echo ""
+        echo "try run [$GITHUB_WORKSPACE/$DIY_P2_SH]"
         chmod +x $GITHUB_WORKSPACE/$DIY_P2_SH
         cd /workdir/openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
@@ -171,9 +177,9 @@ jobs:
       if: (github.event.inputs.config_path != 'false' && github.event.inputs.config_path != '')
       run: |
         echo ""
-        echo "cp [${{github.event.inputs.config_path}}] to [${DIY_CONFIG_EXT_FILE_FULL_PATH}]"
+        echo "cp [${{github.event.inputs.config_path}}] to [${DIY_CONFIG_FILE_FULL_PATH}]"
         cd $GITHUB_WORKSPACE
-        [ ! -f ${DIY_CONFIG_EXT_FILE_FULL_PATH} ] && [ -f ${{github.event.inputs.config_path}} ] && cp ${{github.event.inputs.config_path}} ${DIY_CONFIG_EXT_FILE_FULL_PATH}
+        [ ! -e ${DIY_CONFIG_FILE_FULL_PATH} ] && [ -e ${{github.event.inputs.config_path}} ] && cp ${{github.event.inputs.config_path}} ${DIY_CONFIG_FILE_FULL_PATH}
 
 
 
@@ -182,18 +188,24 @@ jobs:
       if: (github.event.inputs.config_url != 'false' && github.event.inputs.config_url != '')
       run: |
         echo ""
-        echo "down config from ${{github.event.inputs.config_url}} to ${DIY_CONFIG_FILE_FULL_PATH}"
+        echo "down config from [${{github.event.inputs.config_url}}] to [${DIY_CONFIG_EXT_FILE_FULL_PATH}]"
         wget -d -O "$DIY_CONFIG_EXT_FILE_FULL_PATH" "${{github.event.inputs.config_url}}"
         
-        [ -f ${DIY_CONFIG_EXT_FILE_FULL_PATH} ] && echo "";echo "downloaded success ${DIY_CONFIG_FILE_FULL_PATH}"
-        [ ! -f "${DIY_CONFIG_FILE_FULL_PATH}" && -f "${DIY_CONFIG_EXT_FILE_FULL_PATH}" ] && echo "";echo "cp [${DIY_CONFIG_EXT_FILE_FULL_PATH}] to [${DIY_CONFIG_FILE_FULL_PATH}]";cp [${DIY_CONFIG_EXT_FILE_FULL_PATH}] to [${DIY_CONFIG_FILE_FULL_PATH}]"
-        [ ! -f "${DIY_CONFIG_FILE_FULL_PATH}" ] && echo "miss $DIY_CONFIG_FILE_FULL_PATH"
+        
+        #下载成功
+        [ -e ${DIY_CONFIG_EXT_FILE_FULL_PATH} ] && echo "";echo "downloaded [${{github.event.inputs.config_url}}] success to [${DIY_CONFIG_EXT_FILE_FULL_PATH}]"
+        
+        
+        #尝试复制文件
+        [ ! -e ${DIY_CONFIG_FILE_FULL_PATH} && -e ${DIY_CONFIG_EXT_FILE_FULL_PATH} ] && echo "";echo "cp [${DIY_CONFIG_EXT_FILE_FULL_PATH}] to [${DIY_CONFIG_FILE_FULL_PATH}]";cp ${DIY_CONFIG_EXT_FILE_FULL_PATH} ${DIY_CONFIG_FILE_FULL_PATH}
+        [ ! -e ${DIY_CONFIG_FILE_FULL_PATH} ] && echo "miss $DIY_CONFIG_FILE_FULL_PATH"
         
         #run diy_sh
-        #[ -f $GITHUB_WORKSPACE/$DIY_LJX_APPEND_SH ] && chmod +x $GITHUB_WORKSPACE/$DIY_LJX_APPEND_SH;$GITHUB_WORKSPACE/$DIY_LJX_APPEND_SH
+        #[ -e $GITHUB_WORKSPACE/$DIY_LJX_APPEND_SH ] && chmod +x $GITHUB_WORKSPACE/$DIY_LJX_APPEND_SH;$GITHUB_WORKSPACE/$DIY_LJX_APPEND_SH
+        
         #replace to .config
         #cp $DIY_CONFIG_FILE_FULL_PATH /workdir/openwrt/.config
-        [ -f "$DIY_CONFIG_FILE_FULL_PATH" ] && echo "";cat $DIY_CONFIG_FILE_FULL_PATH
+        [ -e $DIY_CONFIG_FILE_FULL_PATH ] && echo "";echo "cat ${DIY_CONFIG_FILE_FULL_PATH}";cat ${DIY_CONFIG_FILE_FULL_PATH}
 
 
 
